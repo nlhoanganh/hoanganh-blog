@@ -47,7 +47,7 @@ Understanding these terms before you see them will save confusion.
 | Term | What it is | Analogy |
 |------|-----------|---------|
 | **Container** | A packaged app + everything it needs to run | A shipping container — self-contained |
-| **Docker image** | The blueprint for a container | A class definition (the container is the instance) |
+| **Container image** | The blueprint for a container, built by Podman from a Dockerfile | A class definition (the container is the instance) |
 | **Kubernetes (K8s)** | A system that runs and manages containers across multiple machines | A ship captain that decides where/how to run containers |
 | **GKE** | Google's managed Kubernetes service | Google runs the Kubernetes control plane for you |
 | **Pod** | The smallest unit in K8s — wraps one or more containers | A single running container (usually) |
@@ -68,7 +68,7 @@ Understanding these terms before you see them will save confusion.
 
 ## Part 3: All Steps at a Glance
 
-1. **Install tools** — gcloud CLI, kubectl, Docker Desktop
+1. **Install tools** — gcloud CLI, kubectl, Podman Desktop
 2. **Create a Google Cloud project** — your billing & resource container
 3. **Enable required Google APIs** — unlock GKE, Artifact Registry, etc.
 4. **Create a GKE cluster** — the Kubernetes environment where your app lives
@@ -93,13 +93,18 @@ Understanding these terms before you see them will save confusion.
 
 You need three tools on your machine.
 
-**A) Docker Desktop**
-You likely have this since you have basic Docker knowledge. If not: https://www.docker.com/products/docker-desktop/
+**A) Podman Desktop**
+Podman is a free, daemonless, rootless container tool — a drop-in replacement for Docker. Download from: https://podman-desktop.io
+
+After installing, start the Podman machine (the Linux VM that runs containers on Windows/Mac):
+```bash
+podman machine start
+```
 
 Verify:
 ```bash
-docker --version
-# Docker version 24.x.x
+podman --version
+# podman version 5.x.x
 ```
 
 **B) Google Cloud CLI (`gcloud`)**
@@ -121,7 +126,7 @@ gcloud components install kubectl
 
 Verify all three:
 ```bash
-docker --version
+podman --version
 gcloud --version
 kubectl version --client
 ```
@@ -213,10 +218,15 @@ gcloud artifacts repositories create blog \
   --description="Blog app images"
 ```
 
-Authenticate Docker to push to this registry:
+Authenticate Podman to push to this registry:
 ```bash
-gcloud auth configure-docker us-central1-docker.pkg.dev
+gcloud auth print-access-token | podman login \
+  -u oauth2accesstoken \
+  --password-stdin \
+  us-central1-docker.pkg.dev
 ```
+
+> **Note:** This login token expires after ~1 hour. Re-run this command if you get a 401 Unauthorized error when pushing.
 
 Your full image path format will be:
 ```
@@ -370,7 +380,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# ARG lets you pass a value at build time: docker build --build-arg VITE_API_BASE_URL=""
+# ARG lets you pass a value at build time: podman build --build-arg VITE_API_BASE_URL=""
 # ENV makes it available to the build process (Vite reads it during npm run build)
 # When empty, axios will use relative URLs (/api/...) which nginx proxies to the backend.
 ARG VITE_API_BASE_URL=""
@@ -405,27 +415,27 @@ Replace `my-blog-project` with your actual GCP project ID throughout.
 # ── Backend ──────────────────────────────────────────────────────────────────
 cd backend
 
-docker build \
+podman build \
   -t us-central1-docker.pkg.dev/my-blog-project/blog/backend:v1 \
   .
 
-docker push us-central1-docker.pkg.dev/my-blog-project/blog/backend:v1
+podman push us-central1-docker.pkg.dev/my-blog-project/blog/backend:v1
 
 # ── Frontend ──────────────────────────────────────────────────────────────────
 cd ../frontend
 
-docker build \
+podman build \
   --build-arg VITE_API_BASE_URL="" \
   -t us-central1-docker.pkg.dev/my-blog-project/blog/frontend:v1 \
   .
 
-docker push us-central1-docker.pkg.dev/my-blog-project/blog/frontend:v1
+podman push us-central1-docker.pkg.dev/my-blog-project/blog/frontend:v1
 ```
 
 What's happening:
-- `docker build` runs your Dockerfile, producing a local image
+- `podman build` runs your Dockerfile, producing a local image
 - The tag (`-t`) gives the image a full address that Artifact Registry understands
-- `docker push` uploads the image to your private registry in Google Cloud
+- `podman push` uploads the image to your private registry in Google Cloud
 - When Kubernetes runs your pod, it pulls the image from this address
 
 ---
@@ -796,8 +806,8 @@ When you change code and want to push a new version:
 
 ```bash
 # 1. Build new image with a new tag (always use a new tag — never overwrite :v1)
-docker build -t us-central1-docker.pkg.dev/my-blog-project/blog/backend:v2 backend/
-docker push us-central1-docker.pkg.dev/my-blog-project/blog/backend:v2
+podman build -t us-central1-docker.pkg.dev/my-blog-project/blog/backend:v2 backend/
+podman push us-central1-docker.pkg.dev/my-blog-project/blog/backend:v2
 
 # 2. Update the Deployment to use the new image
 kubectl set image deployment/backend \
