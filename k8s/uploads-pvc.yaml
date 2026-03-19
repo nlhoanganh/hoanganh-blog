@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: blog
+spec:
+  # ReadWriteOnce: the disk can be mounted by one pod at a time.
+  # This is fine because we run a single backend replica.
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # 5GB is more than enough for a blog's images. GCP charges ~$0.10/GB/month.
+      storage: 5Gi
+  # "standard-rwo" is GCP's standard persistent SSD disk. GKE Autopilot
+  # provisions it automatically when the first pod claims this PVC.
+  storageClassName: standard-rwo

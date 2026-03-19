@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: blog
+spec:
+  replicas: 1
+  # selector tells the Deployment which pods it manages (must match template labels)
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          # !! Replace "my-blog-project" with your actual GCP project ID
+          image: us-central1-docker.pkg.dev/my-blog-project/blog/backend:v1
+          ports:
+            - containerPort: 8080
+          env:
+            # Override the upload directory to use an absolute path.
+            # This corresponds to app.upload.dir in application.properties.
+            - name: APP_UPLOAD_DIR
+              value: /app/uploads
+          volumeMounts:
+            # Mount the persistent disk at /app/uploads so uploaded images
+            # survive pod restarts. The container's working directory is /app,
+            # so Spring Boot writes files to /app/uploads.
+            - name: uploads-storage
+              mountPath: /app/uploads
+          # Resource requests tell Autopilot how much CPU/memory to reserve.
+          # Autopilot requires explicit requests — without them, pods won't schedule.
+          resources:
+            requests:
+              cpu: "250m"       # 250 millicores = 0.25 vCPU
+              memory: "512Mi"   # 512 megabytes
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+      volumes:
+        # Link the volume name used in volumeMounts to the actual PVC
+        - name: uploads-storage
+          persistentVolumeClaim:
+            claimName: uploads-pvc

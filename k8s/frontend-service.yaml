@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: blog
+spec:
+  # LoadBalancer = GCP provisions a public IP and a cloud load balancer.
+  # This is the ONLY entry point from the internet into your cluster.
+  type: LoadBalancer
+  selector:
+    app: frontend   # Routes to pods with label "app: frontend"
+  ports:
+    - name: http
+      port: 80        # Port exposed to the internet
+      targetPort: 80  # Port on the nginx container
