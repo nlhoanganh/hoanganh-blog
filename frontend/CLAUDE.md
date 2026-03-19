@@ -20,8 +20,9 @@ npm run build   # type-check + Vite production build
 `VITE_API_BASE_URL` in `.env` (default `http://localhost:8080`).
 All files read it as:
 ```ts
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 ```
+Use `??` (nullish coalescing), not `||`. In production the env var is set to `""` (empty string) so that axios uses relative URLs proxied by nginx. `||` treats `""` as falsy and incorrectly falls back to localhost.
 
 ## Source layout
 ```

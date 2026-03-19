@@ -6,7 +6,7 @@ interface Props {
   post: PostSummary;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 export default function PostCard({ post }: Props) {
   const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {

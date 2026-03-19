@@ -7,7 +7,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 import TagBadge from '../components/post/TagBadge';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();

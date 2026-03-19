@@ -4,9 +4,10 @@ metadata:
   name: frontend-service
   namespace: blog
 spec:
-  # LoadBalancer = GCP provisions a public IP and a cloud load balancer.
-  # This is the ONLY entry point from the internet into your cluster.
-  type: LoadBalancer
+  # ClusterIP = only reachable inside the cluster.
+  # cloudflared forwards external traffic here via the Cloudflare Tunnel.
+  # No GCP Load Balancer is created, so no ~$18/month charge.
+  type: ClusterIP
   selector:
     app: frontend   # Routes to pods with label "app: frontend"
   ports:

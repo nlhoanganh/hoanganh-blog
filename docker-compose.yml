@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    # Not exposed to host — only reachable by frontend internally
+    # just like ClusterIP in GKE
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ""   # empty string → axios uses relative URLs → nginx proxies them
+    ports:
+      - "3000:80"               # only the frontend is exposed, just like in GKE
+    depends_on:
+      - backend

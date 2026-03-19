@@ -1,7 +1,7 @@
 # Backend – CLAUDE.md
 
 ## Stack
-- Java 17, Spring Boot 3.2.4
+- Java 17, Spring Boot 3.5.5
 - Spring Data JPA + H2 in-memory database
 - Lombok (used on all entities and services)
 - Maven wrapper (`mvnw`)
